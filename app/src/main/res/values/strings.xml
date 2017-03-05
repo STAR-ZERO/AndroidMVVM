@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">AndroidMVVM</string>
+
+    <string name="hint_title">Title</string>
+    <string name="hint_description">Description</string>
+
+    <string name="validation_error_title_empty">Title can not be empty</string>
+    <string name="validation_error_title_too_long">Title is too long</string>
+    <string name="validation_error_description_too_long">Description is too long</string>
+
+    <string name="error_get_task">Task get error</string>
+    <string name="error_validation">Validation error</string>
+    <string name="error_save_task">Task save error</string>
+    <string name="error_delete_task">Delete task error</string>
+    <string name="error_change_state">Change state task error</string>
+
+    <string name="menu_delete">Delete</string>
+</resources>

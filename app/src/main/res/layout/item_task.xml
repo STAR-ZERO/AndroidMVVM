@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+
+        <variable
+            name="viewModel"
+            type="com.star_zero.example.androidmvvm.presentation.tasks.adapter.ItemTaskViewModel" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:onClick="@{viewModel::clickItem}"
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+        <!-- android:onCheckedChanged => https://android.googlesource.com/platform/frameworks/data-binding/+/android-7.0.0_r19/extensions/baseAdapters/src/main/java/android/databinding/adapters/CompoundButtonBindingAdapter.java -->
+        <!--suppress AndroidUnknownAttribute -->
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:checked="@{viewModel.task.completed}"
+            android:onCheckedChanged="@{viewModel::changeCheckComplete}" />
+
+        <TextView
+            android:id="@+id/text_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@{viewModel.task.title}"
+            android:textColor="@{viewModel.task.completed ? @color/colorTextCompleted : @color/colorTextActive }"
+            android:textAppearance="@style/TextAppearance.AppCompat.Title" />
+
+    </LinearLayout>
+</layout>
