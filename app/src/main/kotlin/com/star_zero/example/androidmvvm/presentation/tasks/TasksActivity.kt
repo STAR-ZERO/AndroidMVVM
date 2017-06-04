@@ -11,17 +11,17 @@ import com.star_zero.example.androidmvvm.databinding.ActivityTasksBinding
 import com.star_zero.example.androidmvvm.presentation.add_edit_task.AddEditTaskActivity
 import com.star_zero.example.androidmvvm.presentation.shared.view.BaseActivity
 import com.star_zero.example.androidmvvm.presentation.tasks.adapter.ItemTaskViewModel
+import io.reactivex.disposables.CompositeDisposable
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
-import rx.subscriptions.CompositeSubscription
 import javax.inject.Inject
 
 open class TasksActivity : BaseActivity() {
 
     private lateinit var binding: ActivityTasksBinding
 
-    private val subscriptions = CompositeSubscription()
+    private val disposables = CompositeDisposable()
 
     @Inject
     lateinit var viewModel: TasksViewModel
@@ -55,7 +55,7 @@ open class TasksActivity : BaseActivity() {
 
     override fun onDestroy() {
         viewModel.onDestroy()
-        subscriptions.clear()
+        disposables.clear()
         super.onDestroy()
     }
 
@@ -79,12 +79,12 @@ open class TasksActivity : BaseActivity() {
     // ----------------------
 
     private fun subscribe() {
-        subscriptions.add(viewModel.clickNewTask.subscribe {
+        disposables.add(viewModel.clickNewTask.subscribe {
             val intent = Intent(this, AddEditTaskActivity::class.java)
             startActivity(intent)
         })
 
-        subscriptions.add(viewModel.errorMessage.subscribe { resId ->
+        disposables.add(viewModel.errorMessage.subscribe { resId ->
             Snackbar.make(binding.root, resId, Snackbar.LENGTH_LONG).show()
         })
     }

@@ -5,16 +5,17 @@ import com.star_zero.example.androidmvvm.R
 import com.star_zero.example.androidmvvm.application.TaskService
 import com.star_zero.example.androidmvvm.domain.task.Task
 import com.star_zero.example.androidmvvm.presentation.tasks.adapter.TasksAdapter
-import rx.Observable
-import rx.subjects.PublishSubject
-import rx.subscriptions.CompositeSubscription
+import com.star_zero.example.androidmvvm.utils.Irrelevant
+import io.reactivex.Observable
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.subjects.PublishSubject
 import javax.inject.Inject
 
 class TasksViewModel @Inject constructor(val taskService: TaskService) {
 
     val adapter: TasksAdapter = TasksAdapter()
 
-    private val subscriptions = CompositeSubscription()
+    private val disposables = CompositeDisposable()
 
     fun onCreate() {
         subscribe()
@@ -26,7 +27,7 @@ class TasksViewModel @Inject constructor(val taskService: TaskService) {
 
     fun onDestroy() {
         taskService.onDestroy()
-        subscriptions.clear()
+        disposables.clear()
     }
 
     // ----------------------
@@ -34,7 +35,7 @@ class TasksViewModel @Inject constructor(val taskService: TaskService) {
     // ----------------------
 
     fun onClickNewTask(@Suppress("UNUSED_PARAMETER") view: View) {
-        clickNewTaskSubject.onNext(null)
+        clickNewTaskSubject.onNext(Irrelevant.INSTANCE)
     }
 
     // ----------------------
@@ -54,11 +55,11 @@ class TasksViewModel @Inject constructor(val taskService: TaskService) {
     // ----------------------
 
     private fun subscribe() {
-        subscriptions.add(taskService.tasks.subscribe(adapter::setTasks))
-        subscriptions.add(taskService.errorFetchTasks.subscribe {
+        disposables.add(taskService.tasks.subscribe(adapter::setTasks))
+        disposables.add(taskService.errorFetchTasks.subscribe {
             errorMessageSubject.onNext(R.string.error_get_task)
         })
-        subscriptions.add(taskService.errorChangeCompleteState.subscribe {
+        disposables.add(taskService.errorChangeCompleteState.subscribe {
             errorMessageSubject.onNext(R.string.error_change_state)
         })
     }
@@ -67,10 +68,10 @@ class TasksViewModel @Inject constructor(val taskService: TaskService) {
     // Notification
     // ----------------------
 
-    private val clickNewTaskSubject = PublishSubject.create<Void>()
-    val clickNewTask: Observable<Void> = clickNewTaskSubject.asObservable()
+    private val clickNewTaskSubject = PublishSubject.create<Irrelevant>()
+    val clickNewTask: Observable<Irrelevant> = clickNewTaskSubject.hide()
 
     private val errorMessageSubject = PublishSubject.create<Int>()
-    val errorMessage: Observable<Int> = errorMessageSubject.asObservable()
+    val errorMessage: Observable<Int> = errorMessageSubject.hide()
 }
 

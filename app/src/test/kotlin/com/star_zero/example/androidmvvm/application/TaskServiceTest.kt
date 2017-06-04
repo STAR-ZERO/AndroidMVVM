@@ -5,7 +5,11 @@ import com.star_zero.example.androidmvvm.application.dto.TaskDTO
 import com.star_zero.example.androidmvvm.di.MockDefaultTaskRepository
 import com.star_zero.example.androidmvvm.domain.task.Task
 import com.star_zero.example.androidmvvm.domain.task.TaskId
-import com.star_zero.example.androidmvvm.helper.HotTestSubscriber
+import com.star_zero.example.androidmvvm.helper.HotTestObserver
+import com.star_zero.example.androidmvvm.utils.Irrelevant
+import io.reactivex.Observable
+import io.reactivex.android.plugins.RxAndroidPlugins
+import io.reactivex.schedulers.Schedulers
 import org.hamcrest.Matchers.not
 import org.hamcrest.core.Is.`is`
 import org.junit.After
@@ -15,11 +19,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import rx.Observable
-import rx.Scheduler
-import rx.android.plugins.RxAndroidPlugins
-import rx.android.plugins.RxAndroidSchedulersHook
-import rx.schedulers.Schedulers
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -30,17 +29,15 @@ class TaskServiceTest {
     @Before
     @Throws(Exception::class)
     fun setUp() {
-        RxAndroidPlugins.getInstance().registerSchedulersHook(object : RxAndroidSchedulersHook() {
-            override fun getMainThreadScheduler(): Scheduler {
-                return Schedulers.immediate()
-            }
+        RxAndroidPlugins.setInitMainThreadSchedulerHandler({
+            Schedulers.trampoline()
         })
     }
 
     @After
     @Throws(Exception::class)
     fun tearDown() {
-        RxAndroidPlugins.getInstance().reset()
+        RxAndroidPlugins.reset()
     }
 
     @Test
@@ -54,15 +51,15 @@ class TaskServiceTest {
             }
         })
 
-        val testSubscriber = HotTestSubscriber.create<List<Task>>()
-        service.tasks.subscribe(testSubscriber)
+        val testObserver = HotTestObserver.create<List<Task>>()
+        service.tasks.subscribe(testObserver)
 
         service.fetchTasks()
 
-        testSubscriber.awaitTerminalEvent(1, TimeUnit.SECONDS)
-        testSubscriber.assertValueCount(1)
+        testObserver.awaitTerminalEvent(1, TimeUnit.SECONDS)
+        testObserver.assertValueCount(1)
 
-        val tasks = testSubscriber.onNextEvents[0]
+        val tasks = testObserver.values()[0]
         assertThat(tasks[0].id, `is`(TaskId("id")))
     }
 
@@ -75,13 +72,13 @@ class TaskServiceTest {
             }
         })
 
-        val testSubscriber = HotTestSubscriber.create<Void>()
-        service.errorFetchTasks.subscribe(testSubscriber)
+        val testObserver = HotTestObserver.create<Irrelevant>()
+        service.errorFetchTasks.subscribe(testObserver)
 
         service.fetchTasks()
 
-        testSubscriber.awaitTerminalEvent(1, TimeUnit.SECONDS)
-        testSubscriber.assertValueCount(1)
+        testObserver.awaitTerminalEvent(1, TimeUnit.SECONDS)
+        testObserver.assertValueCount(1)
     }
 
     @Test
@@ -90,14 +87,14 @@ class TaskServiceTest {
         val service = TaskService(object : MockDefaultTaskRepository() {
         })
 
-        val testSubscriber = HotTestSubscriber.create<Void>()
-        service.validationError.subscribe(testSubscriber)
+        val testObserver = HotTestObserver.create<Irrelevant>()
+        service.validationError.subscribe(testObserver)
 
         val dto = TaskDTO()
         service.save(dto)
 
-        testSubscriber.awaitTerminalEvent(1, TimeUnit.SECONDS)
-        testSubscriber.assertValueCount(1)
+        testObserver.awaitTerminalEvent(1, TimeUnit.SECONDS)
+        testObserver.assertValueCount(1)
 
         assertThat(dto.titleError, not(0))
     }
@@ -115,16 +112,16 @@ class TaskServiceTest {
             }
         })
 
-        val testSubscriber = HotTestSubscriber.create<Void>()
-        service.successSaveTask.subscribe(testSubscriber)
+        val testObserver = HotTestObserver.create<Irrelevant>()
+        service.successSaveTask.subscribe(testObserver)
 
         val dto = TaskDTO()
         dto.title = "title"
         dto.description = "description"
         service.save(dto)
 
-        testSubscriber.awaitTerminalEvent(1, TimeUnit.SECONDS)
-        testSubscriber.assertValueCount(1)
+        testObserver.awaitTerminalEvent(1, TimeUnit.SECONDS)
+        testObserver.assertValueCount(1)
     }
 
     @Test
@@ -140,16 +137,16 @@ class TaskServiceTest {
             }
         })
 
-        val testSubscriber = HotTestSubscriber.create<Void>()
-        service.errorSaveTask.subscribe(testSubscriber)
+        val testObserver = HotTestObserver.create<Irrelevant>()
+        service.errorSaveTask.subscribe(testObserver)
 
         val dto = TaskDTO()
         dto.title = "title"
         dto.description = "description"
         service.save(dto)
 
-        testSubscriber.awaitTerminalEvent(1, TimeUnit.SECONDS)
-        testSubscriber.assertValueCount(1)
+        testObserver.awaitTerminalEvent(1, TimeUnit.SECONDS)
+        testObserver.assertValueCount(1)
     }
 
     @Test
@@ -161,15 +158,15 @@ class TaskServiceTest {
             }
         })
 
-        val testSubscriber = HotTestSubscriber.create<Void>()
-        service.successSaveTask.subscribe(testSubscriber)
+        val testObserver = HotTestObserver.create<Irrelevant>()
+        service.successSaveTask.subscribe(testObserver)
 
         val task = Task.createNewTask(TaskId("id"), "title", "description")
         val dto = TaskDTO.createFromTask(task)
         service.save(dto)
 
-        testSubscriber.awaitTerminalEvent(1, TimeUnit.SECONDS)
-        testSubscriber.assertValueCount(1)
+        testObserver.awaitTerminalEvent(1, TimeUnit.SECONDS)
+        testObserver.assertValueCount(1)
     }
 
     @Test
@@ -181,15 +178,15 @@ class TaskServiceTest {
             }
         })
 
-        val testSubscriber = HotTestSubscriber.create<Void>()
-        service.errorSaveTask.subscribe(testSubscriber)
+        val testObserver = HotTestObserver.create<Irrelevant>()
+        service.errorSaveTask.subscribe(testObserver)
 
         val task = Task.createNewTask(TaskId("id"), "title", "description")
         val dto = TaskDTO.createFromTask(task)
         service.save(dto)
 
-        testSubscriber.awaitTerminalEvent(1, TimeUnit.SECONDS)
-        testSubscriber.assertValueCount(1)
+        testObserver.awaitTerminalEvent(1, TimeUnit.SECONDS)
+        testObserver.assertValueCount(1)
     }
 
     @Test
@@ -217,15 +214,15 @@ class TaskServiceTest {
             }
         })
 
-        val testSubscriber = HotTestSubscriber.create<Void>()
-        service.errorChangeCompleteState.subscribe(testSubscriber)
+        val testObserver = HotTestObserver.create<Irrelevant>()
+        service.errorChangeCompleteState.subscribe(testObserver)
 
         val task = Task.createNewTask(TaskId("id"), "title", "description")
 
         service.changeCompleteState(task, true)
 
-        testSubscriber.awaitTerminalEvent(1, TimeUnit.SECONDS)
-        testSubscriber.assertValueCount(1)
+        testObserver.awaitTerminalEvent(1, TimeUnit.SECONDS)
+        testObserver.assertValueCount(1)
 
         assertFalse(task.completed)
     }
@@ -239,14 +236,14 @@ class TaskServiceTest {
             }
         })
 
-        val testSubscriber = HotTestSubscriber.create<Void>()
-        service.successDeleteTask.subscribe(testSubscriber)
+        val testObserver = HotTestObserver.create<Irrelevant>()
+        service.successDeleteTask.subscribe(testObserver)
 
         val task = Task.createNewTask(TaskId("id"), "title", "description")
         service.deleteTask(task)
 
-        testSubscriber.awaitTerminalEvent(1, TimeUnit.SECONDS)
-        testSubscriber.assertValueCount(1)
+        testObserver.awaitTerminalEvent(1, TimeUnit.SECONDS)
+        testObserver.assertValueCount(1)
     }
 
     @Test
@@ -258,14 +255,14 @@ class TaskServiceTest {
             }
         })
 
-        val testSubscriber = HotTestSubscriber.create<Void>()
-        service.errorDeleteTask.subscribe(testSubscriber)
+        val testObserver = HotTestObserver.create<Irrelevant>()
+        service.errorDeleteTask.subscribe(testObserver)
 
         val task = Task.createNewTask(TaskId("id"), "title", "description")
         service.deleteTask(task)
 
-        testSubscriber.awaitTerminalEvent(1, TimeUnit.SECONDS)
-        testSubscriber.assertValueCount(1)
+        testObserver.awaitTerminalEvent(1, TimeUnit.SECONDS)
+        testObserver.assertValueCount(1)
     }
 
 }

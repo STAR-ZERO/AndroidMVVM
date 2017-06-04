@@ -3,8 +3,7 @@ package com.star_zero.example.androidmvvm.di
 import com.star_zero.example.androidmvvm.domain.task.Task
 import com.star_zero.example.androidmvvm.domain.task.TaskId
 import com.star_zero.example.androidmvvm.domain.task.TaskRepository
-import rx.Observable
-import java.util.*
+import io.reactivex.Observable
 
 class MockTaskRepository : TaskRepository {
 

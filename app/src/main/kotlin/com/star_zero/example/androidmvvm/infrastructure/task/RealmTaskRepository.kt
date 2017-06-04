@@ -3,11 +3,10 @@ package com.star_zero.example.androidmvvm.infrastructure.task
 import com.star_zero.example.androidmvvm.domain.task.Task
 import com.star_zero.example.androidmvvm.domain.task.TaskId
 import com.star_zero.example.androidmvvm.domain.task.TaskRepository
+import io.reactivex.Observable
 import io.realm.Realm
 import org.joda.time.DateTime
-import rx.Emitter
-import rx.Observable
-import java.util.*
+import java.util.UUID
 
 class RealmTaskRepository : TaskRepository {
 
@@ -31,13 +30,13 @@ class RealmTaskRepository : TaskRepository {
                     realm.commitTransaction()
 
                     emitter.onNext(true)
-                    emitter.onCompleted()
+                    emitter.onComplete()
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
                 emitter.onError(e)
             }
-        }, Emitter.BackpressureMode.NONE)
+        })
     }
 
     override fun update(task: Task): Observable<Boolean> {
@@ -56,13 +55,13 @@ class RealmTaskRepository : TaskRepository {
                     realm.commitTransaction()
 
                     emitter.onNext(true)
-                    emitter.onCompleted()
+                    emitter.onComplete()
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
                 emitter.onError(e)
             }
-        }, Emitter.BackpressureMode.NONE)
+        })
     }
 
     override fun delete(task: Task): Observable<Boolean> {
@@ -78,13 +77,13 @@ class RealmTaskRepository : TaskRepository {
                     realm.commitTransaction()
 
                     emitter.onNext(true)
-                    emitter.onCompleted()
+                    emitter.onComplete()
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
                 emitter.onError(e)
             }
-        }, Emitter.BackpressureMode.NONE)
+        })
     }
 
     override fun fetchTasks(): Observable<List<Task>> {
@@ -109,12 +108,12 @@ class RealmTaskRepository : TaskRepository {
                     }
 
                     emitter.onNext(tasks)
-                    emitter.onCompleted()
+                    emitter.onComplete()
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
                 emitter.onError(e)
             }
-        }, Emitter.BackpressureMode.NONE)
+        })
     }
 }

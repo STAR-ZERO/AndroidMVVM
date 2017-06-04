@@ -11,7 +11,7 @@ import com.star_zero.example.androidmvvm.R
 import com.star_zero.example.androidmvvm.databinding.ActivityAddEditTaskBinding
 import com.star_zero.example.androidmvvm.domain.task.Task
 import com.star_zero.example.androidmvvm.presentation.shared.view.BaseActivity
-import rx.subscriptions.CompositeSubscription
+import io.reactivex.disposables.CompositeDisposable
 import javax.inject.Inject
 
 class AddEditTaskActivity : BaseActivity() {
@@ -29,7 +29,7 @@ class AddEditTaskActivity : BaseActivity() {
 
     private lateinit var binding: ActivityAddEditTaskBinding
 
-    private val subscriptions = CompositeSubscription()
+    private val disposables = CompositeDisposable()
 
     @Inject
     lateinit var viewModel: AddEditTaskViewModel
@@ -57,7 +57,7 @@ class AddEditTaskActivity : BaseActivity() {
 
     override fun onDestroy() {
         viewModel.onDestroy()
-        subscriptions.clear()
+        disposables.clear()
         super.onDestroy()
     }
 
@@ -93,15 +93,15 @@ class AddEditTaskActivity : BaseActivity() {
     // ----------------------
 
     private fun subscribe() {
-        subscriptions.add(viewModel.successSaveTask.subscribe {
+        disposables.add(viewModel.successSaveTask.subscribe {
             finish()
         })
 
-        subscriptions.add(viewModel.successDeleteTask.subscribe {
+        disposables.add(viewModel.successDeleteTask.subscribe {
             finish()
         })
 
-        subscriptions.add(viewModel.errorMessage.subscribe { resId ->
+        disposables.add(viewModel.errorMessage.subscribe { resId ->
             Snackbar.make(binding.root, resId!!, Snackbar.LENGTH_LONG).show()
         })
     }

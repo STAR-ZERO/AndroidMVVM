@@ -9,16 +9,17 @@ import com.star_zero.example.androidmvvm.R
 import com.star_zero.example.androidmvvm.application.TaskService
 import com.star_zero.example.androidmvvm.application.dto.TaskDTO
 import com.star_zero.example.androidmvvm.domain.task.Task
-import rx.Observable
-import rx.subjects.PublishSubject
-import rx.subscriptions.CompositeSubscription
+import com.star_zero.example.androidmvvm.utils.Irrelevant
+import io.reactivex.Observable
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.subjects.PublishSubject
 import javax.inject.Inject
 
 class AddEditTaskViewModel @Inject constructor(private val taskService: TaskService) : BaseObservable() {
 
     private val STATE_KEY_TASK = "task"
 
-    private val subscriptions = CompositeSubscription()
+    private val disposables = CompositeDisposable()
 
     fun onCreate() {
         subscribe()
@@ -26,7 +27,7 @@ class AddEditTaskViewModel @Inject constructor(private val taskService: TaskServ
 
     fun onDestroy() {
         taskService.onDestroy()
-        subscriptions.clear()
+        disposables.clear()
     }
 
     fun restoreState(savedInstanceState: Bundle?) {
@@ -87,17 +88,17 @@ class AddEditTaskViewModel @Inject constructor(private val taskService: TaskServ
 
     private fun subscribe() {
         // save
-        subscriptions.add(taskService.validationError.subscribe {
+        disposables.add(taskService.validationError.subscribe {
             errorMessageSubject.onNext(R.string.error_validation)
         })
-        subscriptions.add(taskService.successSaveTask.subscribe(successSaveTaskSubject::onNext))
-        subscriptions.add(taskService.errorSaveTask.subscribe {
+        disposables.add(taskService.successSaveTask.subscribe(successSaveTaskSubject::onNext))
+        disposables.add(taskService.errorSaveTask.subscribe {
             errorMessageSubject.onNext(R.string.error_save_task)
         })
 
         // delete
-        subscriptions.add(taskService.successDeleteTask.subscribe(successDeleteTaskSubject::onNext))
-        subscriptions.add(taskService.errorDeleteTask.subscribe {
+        disposables.add(taskService.successDeleteTask.subscribe(successDeleteTaskSubject::onNext))
+        disposables.add(taskService.errorDeleteTask.subscribe {
             errorMessageSubject.onNext(R.string.error_delete_task)
         })
     }
@@ -107,11 +108,11 @@ class AddEditTaskViewModel @Inject constructor(private val taskService: TaskServ
     // ----------------------
 
     private val errorMessageSubject = PublishSubject.create<Int>()
-    val errorMessage: Observable<Int> = errorMessageSubject.asObservable()
+    val errorMessage: Observable<Int> = errorMessageSubject.hide()
 
-    private val successSaveTaskSubject = PublishSubject.create<Void>()
-    val successSaveTask: Observable<Void> = successSaveTaskSubject.asObservable()
+    private val successSaveTaskSubject = PublishSubject.create<Irrelevant>()
+    val successSaveTask: Observable<Irrelevant> = successSaveTaskSubject.hide()
 
-    private val successDeleteTaskSubject = PublishSubject.create<Void>()
-    val successDeleteTask: Observable<Void> = successDeleteTaskSubject.asObservable()!!
+    private val successDeleteTaskSubject = PublishSubject.create<Irrelevant>()
+    val successDeleteTask: Observable<Irrelevant> = successDeleteTaskSubject.hide()
 }

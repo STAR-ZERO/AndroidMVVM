@@ -1,6 +1,6 @@
 package com.star_zero.example.androidmvvm.domain.task
 
-import rx.Observable
+import io.reactivex.Observable
 
 interface TaskRepository {
 
