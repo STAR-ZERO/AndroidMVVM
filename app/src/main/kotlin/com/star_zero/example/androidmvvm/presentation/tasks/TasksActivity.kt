@@ -4,20 +4,21 @@ import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.design.widget.Snackbar
+import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import com.star_zero.example.androidmvvm.R
 import com.star_zero.example.androidmvvm.databinding.ActivityTasksBinding
 import com.star_zero.example.androidmvvm.presentation.add_edit_task.AddEditTaskActivity
-import com.star_zero.example.androidmvvm.presentation.shared.view.BaseActivity
 import com.star_zero.example.androidmvvm.presentation.tasks.adapter.ItemTaskViewModel
+import dagger.android.AndroidInjection
 import io.reactivex.disposables.CompositeDisposable
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import javax.inject.Inject
 
-open class TasksActivity : BaseActivity() {
+open class TasksActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityTasksBinding
 
@@ -27,10 +28,10 @@ open class TasksActivity : BaseActivity() {
     lateinit var viewModel: TasksViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        AndroidInjection.inject(this);
         super.onCreate(savedInstanceState)
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_tasks)
 
-        appComponent.inject(this)
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_tasks)
         binding.viewModel = viewModel
 
         subscribe()

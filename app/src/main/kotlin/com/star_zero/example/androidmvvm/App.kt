@@ -1,20 +1,20 @@
 package com.star_zero.example.androidmvvm
 
+import android.app.Activity
 import android.app.Application
-import com.star_zero.example.androidmvvm.di.AppComponent
-import com.star_zero.example.androidmvvm.di.AppModule
 import com.star_zero.example.androidmvvm.di.DaggerAppComponent
+import dagger.android.AndroidInjector
+import dagger.android.DispatchingAndroidInjector
+import dagger.android.HasActivityInjector
 import io.realm.Realm
 import net.danlew.android.joda.JodaTimeAndroid
 import org.greenrobot.eventbus.EventBus
+import javax.inject.Inject
 
-open class App: Application() {
+open class App: Application(), HasActivityInjector {
 
-    open val appComponent: AppComponent by lazy {
-        DaggerAppComponent.builder()
-                .appModule(AppModule())
-                .build()
-    }
+    @Inject
+    lateinit var dispatchingAndroidInjector: DispatchingAndroidInjector<Activity>
 
     override fun onCreate() {
         super.onCreate()
@@ -24,6 +24,12 @@ open class App: Application() {
         Realm.init(this)
 
         EventBus.builder().addIndex(EventBusIndex()).installDefaultEventBus()
+
+        DaggerAppComponent.builder().build().inject(this)
+    }
+
+    override fun activityInjector(): AndroidInjector<Activity> {
+        return dispatchingAndroidInjector
     }
 }
 

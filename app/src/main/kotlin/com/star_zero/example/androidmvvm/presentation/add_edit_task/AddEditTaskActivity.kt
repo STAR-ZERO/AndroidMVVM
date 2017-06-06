@@ -5,16 +5,17 @@ import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.design.widget.Snackbar
+import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import com.star_zero.example.androidmvvm.R
 import com.star_zero.example.androidmvvm.databinding.ActivityAddEditTaskBinding
 import com.star_zero.example.androidmvvm.domain.task.Task
-import com.star_zero.example.androidmvvm.presentation.shared.view.BaseActivity
+import dagger.android.AndroidInjection
 import io.reactivex.disposables.CompositeDisposable
 import javax.inject.Inject
 
-class AddEditTaskActivity : BaseActivity() {
+class AddEditTaskActivity : AppCompatActivity() {
 
     companion object {
 
@@ -35,10 +36,10 @@ class AddEditTaskActivity : BaseActivity() {
     lateinit var viewModel: AddEditTaskViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
-        binding = DataBindingUtil.setContentView<ActivityAddEditTaskBinding>(this, R.layout.activity_add_edit_task)
 
-        appComponent.inject(this)
+        binding = DataBindingUtil.setContentView<ActivityAddEditTaskBinding>(this, R.layout.activity_add_edit_task)
         binding.viewModel = viewModel
 
         subscribe()
