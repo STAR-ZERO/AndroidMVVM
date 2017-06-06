@@ -1,23 +1,20 @@
 package com.star_zero.example.androidmvvm.presentation.add_edit_task
 
-import android.databinding.BaseObservable
 import android.databinding.Bindable
-import android.os.Bundle
 import android.view.View
 import com.android.databinding.library.baseAdapters.BR
 import com.star_zero.example.androidmvvm.R
 import com.star_zero.example.androidmvvm.application.TaskService
 import com.star_zero.example.androidmvvm.application.dto.TaskDTO
 import com.star_zero.example.androidmvvm.domain.task.Task
+import com.star_zero.example.androidmvvm.presentation.shared.viewmodel.ViewModelObservable
 import com.star_zero.example.androidmvvm.utils.Irrelevant
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.PublishSubject
 import javax.inject.Inject
 
-class AddEditTaskViewModel @Inject constructor(private val taskService: TaskService) : BaseObservable() {
-
-    private val STATE_KEY_TASK = "task"
+class AddEditTaskViewModel @Inject constructor(private val taskService: TaskService) : ViewModelObservable() {
 
     private val disposables = CompositeDisposable()
 
@@ -28,15 +25,6 @@ class AddEditTaskViewModel @Inject constructor(private val taskService: TaskServ
     fun onDestroy() {
         taskService.onDestroy()
         disposables.clear()
-    }
-
-    fun restoreState(savedInstanceState: Bundle?) {
-        if (savedInstanceState == null) return
-        taskDTO = savedInstanceState.getParcelable<TaskDTO>(STATE_KEY_TASK)
-    }
-
-    fun saveState(outState: Bundle) {
-        outState.putParcelable(STATE_KEY_TASK, taskDTO)
     }
 
     // ----------------------

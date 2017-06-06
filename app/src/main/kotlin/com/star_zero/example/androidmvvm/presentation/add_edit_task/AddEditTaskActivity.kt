@@ -1,5 +1,7 @@
 package com.star_zero.example.androidmvvm.presentation.add_edit_task
 
+import android.arch.lifecycle.ViewModelProvider
+import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
 import android.content.Intent
 import android.databinding.DataBindingUtil
@@ -32,14 +34,17 @@ class AddEditTaskActivity : AppCompatActivity() {
 
     private val disposables = CompositeDisposable()
 
-    @Inject
     lateinit var viewModel: AddEditTaskViewModel
+
+    @Inject
+    lateinit var viewModelFactory: ViewModelProvider.Factory
 
     override fun onCreate(savedInstanceState: Bundle?) {
         AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
 
         binding = DataBindingUtil.setContentView<ActivityAddEditTaskBinding>(this, R.layout.activity_add_edit_task)
+        viewModel = ViewModelProviders.of(this, viewModelFactory).get(AddEditTaskViewModel::class.java)
         binding.viewModel = viewModel
 
         subscribe()
@@ -52,8 +57,6 @@ class AddEditTaskActivity : AppCompatActivity() {
         if (intent.hasExtra(ARGS_KEY_TASK)) {
             viewModel.setTask(intent.getParcelableExtra<Task>(ARGS_KEY_TASK))
         }
-
-        viewModel.restoreState(savedInstanceState)
     }
 
     override fun onDestroy() {
@@ -82,11 +85,6 @@ class AddEditTaskActivity : AppCompatActivity() {
             }
         }
         return super.onOptionsItemSelected(item)
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        viewModel.saveState(outState)
-        super.onSaveInstanceState(outState)
     }
 
     // ----------------------

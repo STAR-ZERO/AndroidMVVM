@@ -1,5 +1,6 @@
 package com.star_zero.example.androidmvvm.presentation.tasks
 
+import android.arch.lifecycle.ViewModel
 import android.view.View
 import com.star_zero.example.androidmvvm.R
 import com.star_zero.example.androidmvvm.application.TaskService
@@ -11,7 +12,7 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.PublishSubject
 import javax.inject.Inject
 
-class TasksViewModel @Inject constructor(val taskService: TaskService) {
+class TasksViewModel @Inject constructor(val taskService: TaskService) : ViewModel() {
 
     val adapter: TasksAdapter = TasksAdapter()
 

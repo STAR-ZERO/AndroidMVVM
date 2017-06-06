@@ -1,15 +1,17 @@
 package com.star_zero.example.androidmvvm.presentation.tasks
 
+import android.arch.lifecycle.ViewModelProvider
+import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.design.widget.Snackbar
-import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import com.star_zero.example.androidmvvm.R
 import com.star_zero.example.androidmvvm.databinding.ActivityTasksBinding
 import com.star_zero.example.androidmvvm.presentation.add_edit_task.AddEditTaskActivity
+import com.star_zero.example.androidmvvm.presentation.shared.view.BaseActivity
 import com.star_zero.example.androidmvvm.presentation.tasks.adapter.ItemTaskViewModel
 import dagger.android.AndroidInjection
 import io.reactivex.disposables.CompositeDisposable
@@ -18,20 +20,23 @@ import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import javax.inject.Inject
 
-open class TasksActivity : AppCompatActivity() {
+open class TasksActivity : BaseActivity() {
 
     private lateinit var binding: ActivityTasksBinding
 
     private val disposables = CompositeDisposable()
 
-    @Inject
     lateinit var viewModel: TasksViewModel
 
+    @Inject
+    lateinit var viewModelFactory: ViewModelProvider.Factory
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        AndroidInjection.inject(this);
+        AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_tasks)
+        viewModel = ViewModelProviders.of(this, viewModelFactory).get(TasksViewModel::class.java)
         binding.viewModel = viewModel
 
         subscribe()
