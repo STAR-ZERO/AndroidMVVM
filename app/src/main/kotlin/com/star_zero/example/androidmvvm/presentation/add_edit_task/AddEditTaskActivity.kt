@@ -7,17 +7,17 @@ import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.design.widget.Snackbar
-import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import com.star_zero.example.androidmvvm.R
 import com.star_zero.example.androidmvvm.databinding.ActivityAddEditTaskBinding
 import com.star_zero.example.androidmvvm.domain.task.Task
+import com.star_zero.example.androidmvvm.presentation.shared.view.BaseActivity
 import dagger.android.AndroidInjection
 import io.reactivex.disposables.CompositeDisposable
 import javax.inject.Inject
 
-class AddEditTaskActivity : AppCompatActivity() {
+class AddEditTaskActivity : BaseActivity() {
 
     companion object {
 
@@ -46,9 +46,9 @@ class AddEditTaskActivity : AppCompatActivity() {
         binding = DataBindingUtil.setContentView<ActivityAddEditTaskBinding>(this, R.layout.activity_add_edit_task)
         viewModel = ViewModelProviders.of(this, viewModelFactory).get(AddEditTaskViewModel::class.java)
         binding.viewModel = viewModel
+        lifecycle.addObserver(viewModel)
 
         subscribe()
-        viewModel.onCreate()
 
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -60,7 +60,6 @@ class AddEditTaskActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        viewModel.onDestroy()
         disposables.clear()
         super.onDestroy()
     }

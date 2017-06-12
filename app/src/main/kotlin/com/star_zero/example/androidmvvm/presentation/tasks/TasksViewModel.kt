@@ -1,5 +1,8 @@
 package com.star_zero.example.androidmvvm.presentation.tasks
 
+import android.arch.lifecycle.Lifecycle
+import android.arch.lifecycle.LifecycleObserver
+import android.arch.lifecycle.OnLifecycleEvent
 import android.arch.lifecycle.ViewModel
 import android.view.View
 import com.star_zero.example.androidmvvm.R
@@ -12,20 +15,27 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.PublishSubject
 import javax.inject.Inject
 
-class TasksViewModel @Inject constructor(val taskService: TaskService) : ViewModel() {
+class TasksViewModel @Inject constructor(val taskService: TaskService) : ViewModel(), LifecycleObserver {
 
     val adapter: TasksAdapter = TasksAdapter()
 
     private val disposables = CompositeDisposable()
 
+    // ----------------------
+    // Lifecycle
+    // ----------------------
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
     fun onCreate() {
         subscribe()
     }
 
+    @OnLifecycleEvent(Lifecycle.Event.ON_START)
     fun onStart() {
         fetchTasks()
     }
 
+    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     fun onDestroy() {
         taskService.onDestroy()
         disposables.clear()

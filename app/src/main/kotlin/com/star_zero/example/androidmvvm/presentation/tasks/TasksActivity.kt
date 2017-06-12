@@ -38,9 +38,9 @@ open class TasksActivity : BaseActivity() {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_tasks)
         viewModel = ViewModelProviders.of(this, viewModelFactory).get(TasksViewModel::class.java)
         binding.viewModel = viewModel
+        lifecycle.addObserver(viewModel)
 
         subscribe()
-        viewModel.onCreate()
 
         setSupportActionBar(binding.toolbar)
 
@@ -51,7 +51,6 @@ open class TasksActivity : BaseActivity() {
     override fun onStart() {
         super.onStart()
         EventBus.getDefault().register(this)
-        viewModel.onStart()
     }
 
     override fun onStop() {
@@ -60,7 +59,6 @@ open class TasksActivity : BaseActivity() {
     }
 
     override fun onDestroy() {
-        viewModel.onDestroy()
         disposables.clear()
         super.onDestroy()
     }

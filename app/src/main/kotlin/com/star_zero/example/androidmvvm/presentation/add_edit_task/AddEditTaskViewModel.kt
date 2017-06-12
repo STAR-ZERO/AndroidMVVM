@@ -1,5 +1,8 @@
 package com.star_zero.example.androidmvvm.presentation.add_edit_task
 
+import android.arch.lifecycle.Lifecycle
+import android.arch.lifecycle.LifecycleObserver
+import android.arch.lifecycle.OnLifecycleEvent
 import android.databinding.Bindable
 import android.view.View
 import com.android.databinding.library.baseAdapters.BR
@@ -14,14 +17,20 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.PublishSubject
 import javax.inject.Inject
 
-class AddEditTaskViewModel @Inject constructor(private val taskService: TaskService) : ViewModelObservable() {
+class AddEditTaskViewModel @Inject constructor(private val taskService: TaskService) : ViewModelObservable(), LifecycleObserver {
 
     private val disposables = CompositeDisposable()
 
+    // ----------------------
+    // Lifecycle
+    // ----------------------
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
     fun onCreate() {
         subscribe()
     }
 
+    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     fun onDestroy() {
         taskService.onDestroy()
         disposables.clear()
