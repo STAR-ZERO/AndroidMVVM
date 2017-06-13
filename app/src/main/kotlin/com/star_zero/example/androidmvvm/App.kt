@@ -2,6 +2,7 @@ package com.star_zero.example.androidmvvm
 
 import android.app.Activity
 import android.app.Application
+import com.squareup.leakcanary.LeakCanary
 import com.star_zero.example.androidmvvm.di.DaggerAppComponent
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
@@ -11,13 +12,17 @@ import net.danlew.android.joda.JodaTimeAndroid
 import org.greenrobot.eventbus.EventBus
 import javax.inject.Inject
 
-open class App: Application(), HasActivityInjector {
+open class App : Application(), HasActivityInjector {
 
     @Inject
     lateinit var dispatchingAndroidInjector: DispatchingAndroidInjector<Activity>
 
     override fun onCreate() {
         super.onCreate()
+        if (LeakCanary.isInAnalyzerProcess(this)) {
+            return
+        }
+        LeakCanary.install(this)
 
         JodaTimeAndroid.init(this)
 
