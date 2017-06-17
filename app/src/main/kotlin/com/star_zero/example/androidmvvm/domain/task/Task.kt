@@ -10,7 +10,7 @@ import org.joda.time.DateTime
 class Task private constructor(taskId: TaskId, title: String, description: String?, completed: Boolean, createdAt: DateTime) : Entity<TaskId>(taskId), Parcelable {
 
     @get:Bindable
-    var title: String? = title
+    var title: String = title
         private set (value) {
             field = value
             notifyPropertyChanged(BR.title)

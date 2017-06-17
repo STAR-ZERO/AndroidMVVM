@@ -7,7 +7,6 @@ import com.star_zero.example.androidmvvm.di.DaggerAppComponent
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
 import dagger.android.HasActivityInjector
-import io.realm.Realm
 import net.danlew.android.joda.JodaTimeAndroid
 import org.greenrobot.eventbus.EventBus
 import javax.inject.Inject
@@ -26,11 +25,12 @@ open class App : Application(), HasActivityInjector {
 
         JodaTimeAndroid.init(this)
 
-        Realm.init(this)
-
         EventBus.builder().addIndex(EventBusIndex()).installDefaultEventBus()
 
-        DaggerAppComponent.builder().build().inject(this)
+        DaggerAppComponent.builder()
+                .application(this)
+                .build()
+                .inject(this)
     }
 
     override fun activityInjector(): AndroidInjector<Activity> {

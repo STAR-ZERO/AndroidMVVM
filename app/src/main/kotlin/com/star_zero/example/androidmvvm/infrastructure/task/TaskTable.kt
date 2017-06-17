@@ -1,17 +1,40 @@
 package com.star_zero.example.androidmvvm.infrastructure.task
 
-import io.realm.RealmObject
+import android.arch.persistence.room.Entity
+import android.arch.persistence.room.PrimaryKey
+import com.star_zero.example.androidmvvm.domain.task.Task
+import com.star_zero.example.androidmvvm.domain.task.TaskId
+import org.joda.time.DateTime
 
-open class TaskTable: RealmObject() {
+@Entity(tableName = "task")
+data class TaskTable(
+        @PrimaryKey
+        var taskId: TaskId,
+        var title: String,
+        var description: String?,
+        var completed: Boolean,
+        var createdAt: DateTime) {
 
-    var id: String? = null
+    companion object {
+        fun createFromTask(task: Task): TaskTable {
+            return TaskTable(
+                    task.id,
+                    task.title,
+                    task.description,
+                    task.completed,
+                    task.createdAt
+            )
+        }
+    }
 
-    var title: String? = null
-
-    var description: String? = null
-
-    var completed: Boolean = false
-
-    var createdAt: Long = 0
+    fun toTask(): Task {
+        @Suppress("DEPRECATION")
+        return Task.createFromPersistent(
+                taskId,
+                title,
+                description,
+                completed,
+                createdAt
+        )
+    }
 }
-
