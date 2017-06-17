@@ -1,16 +1,16 @@
 package com.star_zero.example.androidmvvm.application
 
+import android.arch.lifecycle.LiveData
 import com.star_zero.example.androidmvvm.application.dto.TaskDTO
 import com.star_zero.example.androidmvvm.domain.task.Task
 import com.star_zero.example.androidmvvm.domain.task.TaskRepository
 import com.star_zero.example.androidmvvm.domain.task.TaskValidator
-import com.star_zero.example.androidmvvm.utils.Irrelevant
-import io.reactivex.Observable
+import com.star_zero.example.androidmvvm.utils.PublishLiveData
+import com.star_zero.example.androidmvvm.utils.extension.fire
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.observers.DisposableObserver
 import io.reactivex.schedulers.Schedulers
-import io.reactivex.subjects.PublishSubject
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -26,12 +26,12 @@ class TaskService @Inject constructor(val taskRepository: TaskRepository) {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(object : DisposableObserver<List<Task>>() {
                     override fun onNext(tasks: List<Task>?) {
-                        tasksSubject.onNext(tasks)
+                        this@TaskService.tasks.value = tasks
                     }
 
                     override fun onError(e: Throwable?) {
                         Timber.w(e)
-                        errorFetchTasksSubject.onNext(Irrelevant.INSTANCE)
+                        errorFetchTasks.fire()
                     }
 
                     override fun onComplete() {
@@ -44,7 +44,7 @@ class TaskService @Inject constructor(val taskRepository: TaskRepository) {
         taskDTO.clearValidationErrors()
 
         if (!validator.validate(taskDTO.title, taskDTO.description)) {
-            validationErrorSubject.onNext(Irrelevant.INSTANCE)
+            validationError.fire()
             taskDTO.setValidationErrors(validator.errors)
             return
         }
@@ -63,17 +63,17 @@ class TaskService @Inject constructor(val taskRepository: TaskRepository) {
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(object : DisposableObserver<Boolean>() {
-                    override fun onNext(result: Boolean?) {
-                        if (result!!) {
-                            successSaveTaskSubject.onNext(Irrelevant.INSTANCE)
+                    override fun onNext(result: Boolean) {
+                        if (result) {
+                            successSaveTask.fire()
                         } else {
-                            errorSaveTaskSubject.onNext(Irrelevant.INSTANCE)
+                            errorSaveTask.fire()
                         }
                     }
 
                     override fun onError(e: Throwable?) {
                         Timber.w(e)
-                        errorSaveTaskSubject.onNext(Irrelevant.INSTANCE)
+                        errorSaveTask.fire()
                     }
 
                     override fun onComplete() {
@@ -90,17 +90,17 @@ class TaskService @Inject constructor(val taskRepository: TaskRepository) {
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(object : DisposableObserver<Boolean>() {
-                    override fun onNext(result: Boolean?) {
-                        if (result!!) {
-                            successSaveTaskSubject.onNext(Irrelevant.INSTANCE)
+                    override fun onNext(result: Boolean) {
+                        if (result) {
+                            successSaveTask.fire()
                         } else {
-                            errorSaveTaskSubject.onNext(Irrelevant.INSTANCE)
+                            errorSaveTask.fire()
                         }
                     }
 
                     override fun onError(e: Throwable?) {
                         Timber.w(e)
-                        errorSaveTaskSubject.onNext(Irrelevant.INSTANCE)
+                        errorSaveTask.fire()
                     }
 
                     override fun onComplete() {
@@ -121,16 +121,11 @@ class TaskService @Inject constructor(val taskRepository: TaskRepository) {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(object : DisposableObserver<Boolean>() {
                     override fun onNext(result: Boolean?) {
-                        if (result!!) {
-                            successDeleteTaskSubject.onNext(Irrelevant.INSTANCE)
-                        } else {
-                            errorSaveTaskSubject.onNext(Irrelevant.INSTANCE)
-                        }
                     }
 
                     override fun onError(e: Throwable?) {
                         Timber.w(e)
-                        errorChangeCompleteStateSubject.onNext(Irrelevant.INSTANCE)
+                        errorChangeCompleteState.fire()
 
                         // rollback
                         if (completed) {
@@ -151,17 +146,17 @@ class TaskService @Inject constructor(val taskRepository: TaskRepository) {
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(object : DisposableObserver<Boolean>() {
-                    override fun onNext(result: Boolean?) {
-                        if (result!!) {
-                            successDeleteTaskSubject.onNext(Irrelevant.INSTANCE)
+                    override fun onNext(result: Boolean) {
+                        if (result) {
+                            successDeleteTask.fire()
                         } else {
-                            errorDeleteTaskSubject.onNext(Irrelevant.INSTANCE)
+                            errorDeleteTask.fire()
                         }
                     }
 
                     override fun onError(e: Throwable?) {
                         Timber.w(e)
-                        errorDeleteTaskSubject.onNext(Irrelevant.INSTANCE)
+                        errorDeleteTask.fire()
                     }
 
                     override fun onComplete() {
@@ -175,29 +170,34 @@ class TaskService @Inject constructor(val taskRepository: TaskRepository) {
     }
 
     // fetchTasks
-    private val tasksSubject = PublishSubject.create<List<Task>>()
-    val tasks: Observable<List<Task>> = tasksSubject.hide()
-    private val errorFetchTasksSubject = PublishSubject.create<Irrelevant>()
-    val errorFetchTasks: Observable<Irrelevant> = errorFetchTasksSubject.hide()
+
+    private val tasks = PublishLiveData<List<Task>?>()
+    fun tasks(): LiveData<List<Task>?> = tasks
+    private val errorFetchTasks = PublishLiveData<Void>()
+    fun errorFetchTasks(): LiveData<Void> = errorFetchTasks
 
     // save
-    private val successSaveTaskSubject = PublishSubject.create<Irrelevant>()
-    val successSaveTask: Observable<Irrelevant> = successSaveTaskSubject.hide()
-    private val errorSaveTaskSubject = PublishSubject.create<Irrelevant>()
-    val errorSaveTask: Observable<Irrelevant> = errorSaveTaskSubject.hide()
+
+    private val successSaveTask = PublishLiveData<Void>()
+    fun successSaveTask(): LiveData<Void> = successSaveTask
+    private val errorSaveTask = PublishLiveData<Void>()
+    fun errorSaveTask(): LiveData<Void> = errorSaveTask
 
     // validation
-    private val validationErrorSubject = PublishSubject.create<Irrelevant>()
-    val validationError: Observable<Irrelevant> = validationErrorSubject.hide()
+
+    private val validationError = PublishLiveData<Void>()
+    fun validationError(): LiveData<Void> = validationError
 
     // completeTask, activateTask
-    private val errorChangeCompleteStateSubject = PublishSubject.create<Irrelevant>()
-    val errorChangeCompleteState: Observable<Irrelevant> = errorChangeCompleteStateSubject.hide()
+
+    private val errorChangeCompleteState = PublishLiveData<Void>()
+    fun errorChangeCompleteState(): LiveData<Void> = errorChangeCompleteState
 
     // delete
-    private val successDeleteTaskSubject = PublishSubject.create<Irrelevant>()
-    val successDeleteTask: Observable<Irrelevant> = successDeleteTaskSubject.hide()
-    private val errorDeleteTaskSubject = PublishSubject.create<Irrelevant>()
-    val errorDeleteTask: Observable<Irrelevant> = errorDeleteTaskSubject.hide()
+
+    private val successDeleteTask = PublishLiveData<Void>()
+    fun successDeleteTask(): LiveData<Void> = successDeleteTask
+    private val errorDeleteTask = PublishLiveData<Void>()
+    fun errorDeleteTask(): LiveData<Void> = errorDeleteTask
 
 }

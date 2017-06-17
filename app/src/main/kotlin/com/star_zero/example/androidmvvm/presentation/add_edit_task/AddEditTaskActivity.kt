@@ -13,8 +13,8 @@ import com.star_zero.example.androidmvvm.R
 import com.star_zero.example.androidmvvm.databinding.ActivityAddEditTaskBinding
 import com.star_zero.example.androidmvvm.domain.task.Task
 import com.star_zero.example.androidmvvm.presentation.shared.view.BaseActivity
+import com.star_zero.example.androidmvvm.utils.extension.observe
 import dagger.android.AndroidInjection
-import io.reactivex.disposables.CompositeDisposable
 import javax.inject.Inject
 
 class AddEditTaskActivity : BaseActivity() {
@@ -31,8 +31,6 @@ class AddEditTaskActivity : BaseActivity() {
     }
 
     private lateinit var binding: ActivityAddEditTaskBinding
-
-    private val disposables = CompositeDisposable()
 
     lateinit var viewModel: AddEditTaskViewModel
 
@@ -57,11 +55,6 @@ class AddEditTaskActivity : BaseActivity() {
         if (intent.hasExtra(ARGS_KEY_TASK)) {
             viewModel.setTask(intent.getParcelableExtra<Task>(ARGS_KEY_TASK))
         }
-    }
-
-    override fun onDestroy() {
-        disposables.clear()
-        super.onDestroy()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -91,17 +84,13 @@ class AddEditTaskActivity : BaseActivity() {
     // ----------------------
 
     private fun subscribe() {
-        disposables.add(viewModel.successSaveTask.subscribe {
-            finish()
-        })
+        viewModel.errorMessage().observe(this) {
+            it?.let { Snackbar.make(binding.root, it, Snackbar.LENGTH_LONG).show() }
+        }
 
-        disposables.add(viewModel.successDeleteTask.subscribe {
-            finish()
-        })
+        viewModel.successSaveTask().observe(this) { finish() }
 
-        disposables.add(viewModel.errorMessage.subscribe { resId ->
-            Snackbar.make(binding.root, resId!!, Snackbar.LENGTH_LONG).show()
-        })
+        viewModel.successDeleteTask().observe(this) { finish() }
     }
 
 }

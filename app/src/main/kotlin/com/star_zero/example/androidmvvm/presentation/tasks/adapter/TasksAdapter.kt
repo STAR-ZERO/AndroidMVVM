@@ -29,7 +29,7 @@ class TasksAdapter : RecyclerView.Adapter<TasksAdapter.ViewHolder>() {
         return tasks?.size ?: 0
     }
 
-    fun setTasks(tasks: List<Task>) {
+    fun setTasks(tasks: List<Task>?) {
         this.tasks = tasks
         notifyDataSetChanged()
     }

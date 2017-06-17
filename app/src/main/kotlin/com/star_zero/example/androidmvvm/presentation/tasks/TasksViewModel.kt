@@ -1,33 +1,25 @@
 package com.star_zero.example.androidmvvm.presentation.tasks
 
-import android.arch.lifecycle.Lifecycle
-import android.arch.lifecycle.LifecycleObserver
-import android.arch.lifecycle.OnLifecycleEvent
-import android.arch.lifecycle.ViewModel
+import android.arch.lifecycle.*
 import android.view.View
 import com.star_zero.example.androidmvvm.R
 import com.star_zero.example.androidmvvm.application.TaskService
 import com.star_zero.example.androidmvvm.domain.task.Task
-import com.star_zero.example.androidmvvm.presentation.tasks.adapter.TasksAdapter
-import com.star_zero.example.androidmvvm.utils.Irrelevant
-import io.reactivex.Observable
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.subjects.PublishSubject
+import com.star_zero.example.androidmvvm.presentation.shared.viewmodel.ViewModelObservable
+import com.star_zero.example.androidmvvm.utils.PublishLiveData
+import com.star_zero.example.androidmvvm.utils.extension.fire
+import com.star_zero.example.androidmvvm.utils.extension.observe
 import javax.inject.Inject
 
-class TasksViewModel @Inject constructor(val taskService: TaskService) : ViewModel(), LifecycleObserver {
-
-    val adapter: TasksAdapter = TasksAdapter()
-
-    private val disposables = CompositeDisposable()
+class TasksViewModel @Inject constructor(val taskService: TaskService) : ViewModelObservable(), LifecycleObserver {
 
     // ----------------------
     // Lifecycle
     // ----------------------
 
     @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
-    fun onCreate() {
-        subscribe()
+    fun onCreate(owner: LifecycleOwner) {
+        subscribe(owner)
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
@@ -38,7 +30,6 @@ class TasksViewModel @Inject constructor(val taskService: TaskService) : ViewMod
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     fun onDestroy() {
         taskService.onDestroy()
-        disposables.clear()
     }
 
     // ----------------------
@@ -46,7 +37,7 @@ class TasksViewModel @Inject constructor(val taskService: TaskService) : ViewMod
     // ----------------------
 
     fun onClickNewTask(@Suppress("UNUSED_PARAMETER") view: View) {
-        clickNewTaskSubject.onNext(Irrelevant.INSTANCE)
+        clickNewTask.fire()
     }
 
     // ----------------------
@@ -65,24 +56,30 @@ class TasksViewModel @Inject constructor(val taskService: TaskService) : ViewMod
     // Subscribe
     // ----------------------
 
-    private fun subscribe() {
-        disposables.add(taskService.tasks.subscribe(adapter::setTasks))
-        disposables.add(taskService.errorFetchTasks.subscribe {
-            errorMessageSubject.onNext(R.string.error_get_task)
-        })
-        disposables.add(taskService.errorChangeCompleteState.subscribe {
-            errorMessageSubject.onNext(R.string.error_change_state)
-        })
+    private fun subscribe(owner: LifecycleOwner) {
+        taskService.errorFetchTasks().observe(owner) {
+            errorMessage.value = R.string.error_get_task
+        }
+
+        taskService.errorFetchTasks().observe(owner) {
+            errorMessage.value = R.string.error_get_task
+        }
+
+        taskService.errorChangeCompleteState().observe(owner) {
+            errorMessage.value = R.string.error_change_state
+        }
     }
 
     // ----------------------
-    // Notification
+    // LiveData
     // ----------------------
 
-    private val clickNewTaskSubject = PublishSubject.create<Irrelevant>()
-    val clickNewTask: Observable<Irrelevant> = clickNewTaskSubject.hide()
+    fun tasks(): LiveData<List<Task>> = Transformations.map(taskService.tasks(), { it })
 
-    private val errorMessageSubject = PublishSubject.create<Int>()
-    val errorMessage: Observable<Int> = errorMessageSubject.hide()
+    private val clickNewTask = PublishLiveData<Void>()
+    fun clickNewTask(): LiveData<Void> = clickNewTask
+
+    private val errorMessage = PublishLiveData<Int>()
+    fun errorMessage(): LiveData<Int> = errorMessage
 }
 

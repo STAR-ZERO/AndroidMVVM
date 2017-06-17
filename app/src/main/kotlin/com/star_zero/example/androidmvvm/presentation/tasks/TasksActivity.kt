@@ -13,8 +13,9 @@ import com.star_zero.example.androidmvvm.databinding.ActivityTasksBinding
 import com.star_zero.example.androidmvvm.presentation.add_edit_task.AddEditTaskActivity
 import com.star_zero.example.androidmvvm.presentation.shared.view.BaseActivity
 import com.star_zero.example.androidmvvm.presentation.tasks.adapter.ItemTaskViewModel
+import com.star_zero.example.androidmvvm.presentation.tasks.adapter.TasksAdapter
+import com.star_zero.example.androidmvvm.utils.extension.observe
 import dagger.android.AndroidInjection
-import io.reactivex.disposables.CompositeDisposable
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -24,12 +25,12 @@ open class TasksActivity : BaseActivity() {
 
     private lateinit var binding: ActivityTasksBinding
 
-    private val disposables = CompositeDisposable()
-
     lateinit var viewModel: TasksViewModel
 
     @Inject
     lateinit var viewModelFactory: ViewModelProvider.Factory
+
+    private val adapter: TasksAdapter = TasksAdapter()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         AndroidInjection.inject(this)
@@ -46,6 +47,7 @@ open class TasksActivity : BaseActivity() {
 
         binding.recyclerTasks.layoutManager = LinearLayoutManager(this)
         binding.recyclerTasks.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
+        binding.recyclerTasks.adapter = adapter
     }
 
     override fun onStart() {
@@ -56,11 +58,6 @@ open class TasksActivity : BaseActivity() {
     override fun onStop() {
         EventBus.getDefault().unregister(this)
         super.onStop()
-    }
-
-    override fun onDestroy() {
-        disposables.clear()
-        super.onDestroy()
     }
 
     // ----------------------
@@ -83,14 +80,18 @@ open class TasksActivity : BaseActivity() {
     // ----------------------
 
     private fun subscribe() {
-        disposables.add(viewModel.clickNewTask.subscribe {
+        viewModel.tasks().observe(this) {
+            adapter.setTasks(it)
+        }
+
+        viewModel.clickNewTask().observe(this) {
             val intent = Intent(this, AddEditTaskActivity::class.java)
             startActivity(intent)
-        })
+        }
 
-        disposables.add(viewModel.errorMessage.subscribe { resId ->
-            Snackbar.make(binding.root, resId, Snackbar.LENGTH_LONG).show()
-        })
+        viewModel.errorMessage().observe(this) {
+            it?.let { Snackbar.make(binding.root, it, Snackbar.LENGTH_LONG).show() }
+        }
     }
 
 }
