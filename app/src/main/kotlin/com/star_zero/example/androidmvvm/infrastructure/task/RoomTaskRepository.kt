@@ -4,7 +4,7 @@ import com.star_zero.example.androidmvvm.domain.task.Task
 import com.star_zero.example.androidmvvm.domain.task.TaskId
 import com.star_zero.example.androidmvvm.domain.task.TaskRepository
 import com.star_zero.example.androidmvvm.infrastructure.AppDatabase
-import io.reactivex.Observable
+import com.star_zero.example.androidmvvm.utils.AsyncLiveData
 import java.util.*
 
 class RoomTaskRepository(val db: AppDatabase) : TaskRepository {
@@ -13,60 +13,28 @@ class RoomTaskRepository(val db: AppDatabase) : TaskRepository {
         return TaskId(UUID.randomUUID().toString())
     }
 
-    override fun save(task: Task): Observable<Boolean> {
-        return Observable.create({ emitter ->
-            try {
-                db.taskDao().insertTask(TaskTable.createFromTask(task))
-                emitter.onNext(true)
-                emitter.onComplete()
-
-            } catch (e: Exception) {
-                e.printStackTrace()
-                emitter.onError(e)
-            }
-        })
+    override fun save(task: Task): AsyncLiveData<Unit> {
+        return AsyncLiveData.create {
+            db.taskDao().insertTask(TaskTable.createFromTask(task))
+        }
     }
 
-    override fun update(task: Task): Observable<Boolean> {
-        return Observable.create({ emitter ->
-            try {
-                db.taskDao().updateTask(TaskTable.createFromTask(task))
-                emitter.onNext(true)
-                emitter.onComplete()
-
-            } catch (e: Exception) {
-                e.printStackTrace()
-                emitter.onError(e)
-            }
-        })
+    override fun update(task: Task): AsyncLiveData<Unit> {
+        return AsyncLiveData.create {
+            db.taskDao().updateTask(TaskTable.createFromTask(task))
+        }
     }
 
-    override fun delete(task: Task): Observable<Boolean> {
-        return Observable.create({ emitter ->
-            try {
-                db.taskDao().deleteTasks(TaskTable.createFromTask(task))
-                emitter.onNext(true)
-                emitter.onComplete()
-
-            } catch (e: Exception) {
-                e.printStackTrace()
-                emitter.onError(e)
-            }
-        })
+    override fun delete(task: Task): AsyncLiveData<Unit> {
+        return AsyncLiveData.create {
+            db.taskDao().deleteTasks(TaskTable.createFromTask(task))
+        }
     }
 
-    override fun fetchTasks(): Observable<List<Task>> {
-        return Observable.create({ emitter ->
-            try {
-                val taskTables = db.taskDao().fetchTask()
-                val tasks = taskTables.map { it.toTask() }
-                emitter.onNext(tasks)
-                emitter.onComplete()
-
-            } catch (e: Exception) {
-                e.printStackTrace()
-                emitter.onError(e)
-            }
-        })
+    override fun fetchTasks(): AsyncLiveData<List<Task>> {
+        return AsyncLiveData.create {
+            val taskTables = db.taskDao().fetchTask()
+            taskTables.map { it.toTask() }
+        }
     }
 }

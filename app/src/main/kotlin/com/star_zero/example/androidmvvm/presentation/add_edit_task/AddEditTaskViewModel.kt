@@ -16,18 +16,21 @@ import javax.inject.Inject
 
 class AddEditTaskViewModel @Inject constructor(private val taskService: TaskService) : ViewModelObservable(), LifecycleObserver {
 
+    private var owner: LifecycleOwner? = null
+
     // ----------------------
     // Lifecycle
     // ----------------------
 
     @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
     fun onCreate(owner: LifecycleOwner) {
+        this.owner = owner
         subscribe(owner)
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     fun onDestroy() {
-        taskService.onDestroy()
+        owner = null
     }
 
     // ----------------------
@@ -65,12 +68,12 @@ class AddEditTaskViewModel @Inject constructor(private val taskService: TaskServ
     // ----------------------
 
     private fun saveTask() {
-        taskService.save(taskDTO)
+        taskService.save(taskDTO, owner!!)
     }
 
     fun deleteTask() {
         val task = this.taskDTO.task ?: return
-        taskService.deleteTask(task)
+        taskService.deleteTask(task, owner!!)
     }
 
     // ----------------------

@@ -1,46 +1,37 @@
 package com.star_zero.example.androidmvvm.application
 
+import android.arch.lifecycle.LifecycleOwner
 import android.arch.lifecycle.LiveData
 import com.star_zero.example.androidmvvm.application.dto.TaskDTO
 import com.star_zero.example.androidmvvm.domain.task.Task
 import com.star_zero.example.androidmvvm.domain.task.TaskRepository
 import com.star_zero.example.androidmvvm.domain.task.TaskValidator
+import com.star_zero.example.androidmvvm.utils.AsyncResult
 import com.star_zero.example.androidmvvm.utils.PublishLiveData
 import com.star_zero.example.androidmvvm.utils.extension.fire
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.observers.DisposableObserver
-import io.reactivex.schedulers.Schedulers
+import com.star_zero.example.androidmvvm.utils.extension.observe
 import timber.log.Timber
 import javax.inject.Inject
 
 class TaskService @Inject constructor(val taskRepository: TaskRepository) {
 
-    private val disposables = CompositeDisposable()
-
     private val validator = TaskValidator()
 
-    fun fetchTasks() {
-        disposables.add(taskRepository.fetchTasks()
-                .subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(object : DisposableObserver<List<Task>>() {
-                    override fun onNext(tasks: List<Task>?) {
-                        this@TaskService.tasks.value = tasks
-                    }
-
-                    override fun onError(e: Throwable?) {
-                        Timber.w(e)
-                        errorFetchTasks.fire()
-                    }
-
-                    override fun onComplete() {
-                    }
-                })
-        )
+    fun fetchTasks(owner: LifecycleOwner) {
+        taskRepository.fetchTasks().observe(owner) {
+            when (it) {
+                is AsyncResult.Success -> {
+                    tasks.value = it.value
+                }
+                is AsyncResult.Error -> {
+                    Timber.w(it.error)
+                    errorFetchTasks.fire()
+                }
+            }
+        }
     }
 
-    fun save(taskDTO: TaskDTO) {
+    fun save(taskDTO: TaskDTO, owner: LifecycleOwner) {
         taskDTO.clearValidationErrors()
 
         if (!validator.validate(taskDTO.title, taskDTO.description)) {
@@ -50,123 +41,75 @@ class TaskService @Inject constructor(val taskRepository: TaskRepository) {
         }
 
         if (taskDTO.task == null) {
-            saveNewTask(taskDTO)
+            saveNewTask(taskDTO, owner)
         } else {
-            updateTask(taskDTO)
+            updateTask(taskDTO, owner)
         }
     }
 
-    private fun saveNewTask(taskDTO: TaskDTO) {
+    private fun saveNewTask(taskDTO: TaskDTO, owner: LifecycleOwner) {
         val task = Task.createNewTask(taskRepository.generateTaskId(), taskDTO.title!!, taskDTO.description)
 
-        disposables.add(taskRepository.save(task)
-                .subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(object : DisposableObserver<Boolean>() {
-                    override fun onNext(result: Boolean) {
-                        if (result) {
-                            successSaveTask.fire()
-                        } else {
-                            errorSaveTask.fire()
-                        }
-                    }
-
-                    override fun onError(e: Throwable?) {
-                        Timber.w(e)
-                        errorSaveTask.fire()
-                    }
-
-                    override fun onComplete() {
-                    }
-                })
-        )
+        taskRepository.save(task).observe(owner) {
+            when(it) {
+                is AsyncResult.Success -> successSaveTask.fire()
+                is AsyncResult.Error -> {
+                    Timber.w(it.error)
+                    errorSaveTask.fire()
+                }
+            }
+        }
     }
 
-    private fun updateTask(taskDTO: TaskDTO) {
+    private fun updateTask(taskDTO: TaskDTO, owner: LifecycleOwner) {
         val task = taskDTO.task!!
         task.update(taskDTO.title!!, taskDTO.description)
 
-        disposables.add(taskRepository.update(task)
-                .subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(object : DisposableObserver<Boolean>() {
-                    override fun onNext(result: Boolean) {
-                        if (result) {
-                            successSaveTask.fire()
-                        } else {
-                            errorSaveTask.fire()
-                        }
-                    }
-
-                    override fun onError(e: Throwable?) {
-                        Timber.w(e)
-                        errorSaveTask.fire()
-                    }
-
-                    override fun onComplete() {
-                    }
-                })
-        )
+        taskRepository.update(task).observe(owner) {
+            when(it) {
+                is AsyncResult.Success -> successSaveTask.fire()
+                is AsyncResult.Error -> {
+                    Timber.w(it.error)
+                    errorSaveTask.fire()
+                }
+            }
+        }
     }
 
-    fun changeCompleteState(task: Task, completed: Boolean) {
+    fun changeCompleteState(task: Task, completed: Boolean, owner: LifecycleOwner) {
         if (completed) {
             task.completeTask()
         } else {
             task.activateTask()
         }
 
-        disposables.add(taskRepository.update(task)
-                .subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(object : DisposableObserver<Boolean>() {
-                    override fun onNext(result: Boolean?) {
-                    }
+        taskRepository.update(task).observe(owner) {
+            when(it) {
+                is AsyncResult.Error -> {
+                    Timber.w(it.error)
+                    errorChangeCompleteState.fire()
 
-                    override fun onError(e: Throwable?) {
-                        Timber.w(e)
-                        errorChangeCompleteState.fire()
-
-                        // rollback
-                        if (completed) {
-                            task.activateTask()
-                        } else {
-                            task.completeTask()
-                        }
+                    // rollback
+                    if (completed) {
+                        task.activateTask()
+                    } else {
+                        task.completeTask()
                     }
-
-                    override fun onComplete() {
-                    }
-                })
-        )
+                }
+            }
+        }
     }
 
-    fun deleteTask(task: Task) {
-        disposables.add(taskRepository.delete(task)
-                .subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(object : DisposableObserver<Boolean>() {
-                    override fun onNext(result: Boolean) {
-                        if (result) {
-                            successDeleteTask.fire()
-                        } else {
-                            errorDeleteTask.fire()
-                        }
-                    }
-
-                    override fun onError(e: Throwable?) {
-                        Timber.w(e)
-                        errorDeleteTask.fire()
-                    }
-
-                    override fun onComplete() {
-                    }
-                })
-        )
-    }
-
-    fun onDestroy() {
-        disposables.clear()
+    fun deleteTask(task: Task, owner: LifecycleOwner) {
+        taskRepository.delete(task).observe(owner) {
+            when (it) {
+                is AsyncResult.Success -> successDeleteTask.fire()
+                is AsyncResult.Error -> {
+                    Timber.w(it.error)
+                    errorDeleteTask.fire()
+                }
+            }
+        }
     }
 
     // fetchTasks

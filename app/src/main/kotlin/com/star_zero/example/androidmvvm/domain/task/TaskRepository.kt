@@ -1,16 +1,16 @@
 package com.star_zero.example.androidmvvm.domain.task
 
-import io.reactivex.Observable
+import com.star_zero.example.androidmvvm.utils.AsyncLiveData
 
 interface TaskRepository {
 
     fun generateTaskId(): TaskId
 
-    fun save(task: Task): Observable<Boolean>
+    fun save(task: Task): AsyncLiveData<Unit>
 
-    fun update(task: Task): Observable<Boolean>
+    fun update(task: Task): AsyncLiveData<Unit>
 
-    fun delete(task: Task): Observable<Boolean>
+    fun delete(task: Task): AsyncLiveData<Unit>
 
-    fun fetchTasks(): Observable<List<Task>>
+    fun fetchTasks(): AsyncLiveData<List<Task>>
 }

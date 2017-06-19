@@ -80,6 +80,7 @@ dependencies {
     testCompile 'joda-time:joda-time:2.9.5'
 
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+    compile "org.jetbrains.kotlinx:kotlinx-coroutines-android:0.16"
 
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support:design:25.3.1'
@@ -106,12 +107,15 @@ dependencies {
     compile 'com.google.dagger:dagger-android-support:2.11-rc2'
     kapt 'com.google.dagger:dagger-android-processor:2.11-rc2'
 
-    compile 'io.reactivex.rxjava2:rxandroid:2.0.1'
-    compile 'io.reactivex.rxjava2:rxjava:2.1.0'
-
     compile 'org.greenrobot:eventbus:3.0.0'
     kapt 'org.greenrobot:eventbus-annotation-processor:3.0.1'
 
     debugCompile 'com.facebook.stetho:stetho:1.4.2'
     debugCompile 'com.uphyca:stetho_realm:2.0.0'
+}
+
+kotlin {
+    experimental {
+        coroutines "enable"
+    }
 }

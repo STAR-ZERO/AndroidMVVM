@@ -13,12 +13,15 @@ import javax.inject.Inject
 
 class TasksViewModel @Inject constructor(val taskService: TaskService) : ViewModelObservable(), LifecycleObserver {
 
+    private var owner: LifecycleOwner? = null
+
     // ----------------------
     // Lifecycle
     // ----------------------
 
     @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
     fun onCreate(owner: LifecycleOwner) {
+        this.owner = owner
         subscribe(owner)
     }
 
@@ -29,7 +32,7 @@ class TasksViewModel @Inject constructor(val taskService: TaskService) : ViewMod
 
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     fun onDestroy() {
-        taskService.onDestroy()
+        owner = null
     }
 
     // ----------------------
@@ -45,11 +48,11 @@ class TasksViewModel @Inject constructor(val taskService: TaskService) : ViewMod
     // ----------------------
 
     private fun fetchTasks() {
-        taskService.fetchTasks()
+        taskService.fetchTasks(owner!!)
     }
 
     fun changeCompleteState(task: Task, completed: Boolean) {
-        taskService.changeCompleteState(task, completed)
+        taskService.changeCompleteState(task, completed, owner!!)
     }
 
     // ----------------------
